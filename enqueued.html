@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Enqueued Jobs</title>
+	<style>
+		body {
+			background-color: #F2F4FD;
+		}
+
+		/* Buttons */
+		.btn {
+			padding: 7px 10px;
+			margin: 0 5px;
+			border-radius: 4px;
+			background-color: #5881D8;
+			color: #fff;
+			border: none;
+			font-weight: bold;
+			transition: box-shadow 0.3s ease;
+		}
+
+		.btn-action {
+			background-color: #fff;
+			color: #5881D8;
+			border: #5881D8 solid 1px;
+		}
+
+		.btn-danger {
+			background-color: #fff;
+			color: #DB460F;
+			border: #DB460F solid 1px;
+		}
+
+		button:active {
+			opacity: 0.8;
+		}
+
+		/* Enqueued Page */
+
+		.redis-enqueued-main-content {
+			margin: 7%;
+		}
+
+		.redis-enqueued-main-content h1 {
+			color: #5881D8;
+		}
+
+		.redis-enqueued-main-content .content {
+			position: relative;
+		}
+
+		.redis-enqueued-main-content .selected {
+			color: #C87021;
+		}
+
+		/* Sidebar */
+		
+		.redis-enqueued-main-content #sidebar {
+			padding-top: 50px;
+			position: absolute;
+		}
+
+		.redis-enqueued-main-content .queue-list {
+			width: 170px;
+			box-sizing: border-box;
+			height: 60vh;
+			padding: auto;
+
+			overflow: auto;
+			scrollbar-width: thin;
+			scrollbar-color: #c4d0ec transparent;
+		}
+
+		.redis-enqueued-main-content .queue-list ul {
+			list-style: none;
+			padding: 0;
+		}
+
+		.redis-enqueued-main-content .queue-list-item {
+			padding: 10px;
+			margin-bottom: 5px;
+		}
+
+		/* Right side header and table content */
+
+		.redis-enqueued-main-content .right-side {
+			position: absolute;
+			margin-left: 200px;
+		}
+
+		.redis-enqueued-main-content .pagination {
+			justify-content: center;
+			display: flex;
+			margin: 20px;
+		}
+
+		/* Fixed Header */
+
+		.redis-enqueued-main-content .header {
+			background-color: #9FACC5;
+			height: 50px;
+			display: flex;
+		}
+
+		.redis-enqueued-main-content .header .filter-opts {
+			width: 80%;
+			margin: auto;
+			display: flex;
+		}
+
+		.redis-enqueued-main-content .header .filter-opts input,
+		select {
+			padding: 6px 8px;
+			margin: 2px 0;
+			display: inline-block;
+			border: none;
+		}
+
+		.redis-enqueued-main-content .header .filter-opts-items {
+			margin: 0 10px;
+			display: flex;
+			justify-content: space-between;
+		}
+
+		.redis-enqueued-main-content .header .filter-opts-items .limit {
+			background-color: #fff;
+			font-size: small;
+			margin: auto;
+			padding: 7px 20px;
+		}
+
+		.redis-enqueued-main-content .header .action-buttons {
+			width: 20%;
+			margin: auto;
+			text-align: center;
+		}
+
+		/* Enqueued Jobs Table */
+
+		.redis-enqueued-main-content .job-table {
+			width: 100%;
+			border-collapse: collapse;
+		}
+
+		.redis-enqueued-main-content .job-table th,
+		td {
+			padding: 10px;
+			border: 1px solid #ddd;
+			text-align: center;
+
+			max-width: 250px;
+			overflow: auto;
+			white-space: nowrap;
+		}
+
+		.redis-enqueued-main-content .job-table th {
+			background-color: #fff;
+		}
+
+		.redis-enqueued-main-content .job-table .id {
+			width: 40%;
+		}
+
+		.redis-enqueued-main-content .job-table .execute-fn-symbol {
+			width: 10%;
+		}
+
+		.redis-enqueued-main-content .job-table .args {
+			width: 10%;
+		}
+
+		.redis-enqueued-main-content .job-table .enqueued-at {
+			width: 20%;
+		}
+
+		.redis-enqueued-main-content .job-table .select {
+			width: 20%;
+			text-align: center;
+		}
+
+		/* Bottom Purge Button  */
+		.redis-enqueued-main-content .bottom {
+			margin-top: 50px;
+		}
+	</style>
+</head>
+
+<body>
+
+
+	<div class="redis-enqueued-main-content">
+		<h1>Enqueued Jobs</h1>
+		<div class="content">
+			<div id="sidebar">
+				<h3>Queues</h3>
+				<div class="queue-list">
+					<ul>
+						<li class="queue-list-item">default</li>
+						<li class="queue-list-item">queue1</li>
+						<li class="queue-list-item">queue2</li>
+						<li class="queue-list-item">queue3</li>
+						<li class="queue-list-item">queue4</li>
+					</ul>
+				</div>
+			</div>
+			<div class="right-side">
+				<div class="header">
+					<div class="filter-opts">
+						<div class="filter-opts-items">
+							<select name="filter" id="filter">
+								<option value="id">id</option>
+								<option value="execute-fn-sym">execute-fn-sym</option>
+								<option value="type">type</option>
+							</select>
+							<input type="text" name="filter" id="filter" placeholder="filter value">
+						</div>
+
+						<div class="filter-opts-items">
+							<span class="limit">Limit</span>
+							<input type="text" name="limit" id="limit" placeholder="custom limit">
+						</div>
+						<div class="filter-opts-items">
+							<button class="btn btn-action">Clear</button>
+							<button class="btn">Apply</button>
+
+						</div>
+					</div>
+					<div class="action-buttons">
+						<button class="btn">Prioritise</button>
+						<button class="btn btn-danger">Delete</button>
+					</div>
+				</div>
+				<div class="pagination"> 1 2 .. ></div>
+				<table class="job-table">
+					<thead>
+						<tr>
+							<th class="id">Id</th>
+							<th class="execute-fn-sym">Execute-in-symbol</th>
+							<th class="args">Args</th>
+							<th class="enqueued-at">Enqueued-at</th>
+							<th class="select"> <input type="checkbox" name="" id=""></th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>1</td>
+							<td>goose.demo-redis/my-fn</td>
+							<td>foo, bar</td>
+							<td>June 7, 2509, 10:41 AM</td>
+							<td><input type="checkbox" name="" id=""></td>
+						</tr>
+						<tr>
+							<td>2</td>
+							<td>goose.demo-redis/my-fn</td>
+							<td>Foo bar</td>
+							<td>June 7, 2509, 10:42 AM</td>
+							<td><input type="checkbox" name="" id=""></td>
+						</tr>
+						<!-- Repeat rows as needed -->
+					</tbody>
+				</table>
+				<div class="bottom">
+					<button class="btn btn-danger btn-md">Purge</button>
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+</body>
+
+</html>
